@@ -1,42 +1,30 @@
-import { BrowserRouter } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from '@/context/AuthContext';
-import AppRoutes from '@/routes/AppRoutes';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { useEffect } from 'react';
+import { AuthProvider } from '@context/AuthContext';
+import { ThemeProvider } from '@context/ThemeContext';
+import { NotificationProvider } from '@context/NotificationContext';
+import AppRoutes from '@routes/AppRoutes';
+import ErrorBoundary from '@components/common/ErrorBoundary';
 
 function App() {
+  useEffect(() => {
+    // Set initial theme
+    const savedTheme = localStorage.getItem('jargon_theme') || 'light';
+    if (savedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
-      <BrowserRouter>
+      <ThemeProvider>
         <AuthProvider>
-          <AppRoutes />
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: '#fff',
-                color: '#333',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-                borderRadius: '8px',
-                padding: '12px 16px',
-              },
-              success: {
-                iconTheme: {
-                  primary: '#10b981',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
-                },
-              },
-            }}
-          />
+          <NotificationProvider>
+            <AppRoutes />
+          </NotificationProvider>
         </AuthProvider>
-      </BrowserRouter>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

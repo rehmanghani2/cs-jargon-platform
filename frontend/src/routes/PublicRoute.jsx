@@ -1,29 +1,27 @@
-import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/AuthContext';
-import Loader from '@/components/common/Loader';
+import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { useAuth } from '@hooks/useAuth';
+import Loader from '@components/common/Loader';
 
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading, isProfileComplete, hasCompletedPlacement } = useAuth();
+function PublicRoute() {
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
   if (isLoading) {
-    return <Loader fullScreen text="Loading..." />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader size="large" />
+      </div>
+    );
   }
 
   if (isAuthenticated) {
-    // Redirect based on user status
-    if (!isProfileComplete) {
-      return <Navigate to="/introduction" replace />;
-    }
-    if (!hasCompletedPlacement) {
-      return <Navigate to="/placement-test" replace />;
-    }
-    
+    // Get the page they were trying to visit or default to dashboard
     const from = location.state?.from?.pathname || '/dashboard';
     return <Navigate to={from} replace />;
   }
 
-  return children;
-};
+  // User is not authenticated, allow access to public routes
+  return <Outlet />;
+}
 
 export default PublicRoute;

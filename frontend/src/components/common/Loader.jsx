@@ -1,51 +1,30 @@
-import { ImSpinner2 } from 'react-icons/im';
+import PropTypes from 'prop-types';
 
-const Loader = ({
-  size = 'md',
-  color = 'primary',
-  fullScreen = false,
-  text = '',
-}) => {
-  const sizes = {
-    sm: 'w-4 h-4',
-    md: 'w-8 h-8',
-    lg: 'w-12 h-12',
-    xl: 'w-16 h-16',
+function Loader({ size = 'medium', text = '', className = '' }) {
+  const sizeClasses = {
+    small: 'w-4 h-4 border-2',
+    medium: 'w-8 h-8 border-3',
+    large: 'w-12 h-12 border-4',
   };
 
-  const colors = {
-    primary: 'text-primary-600',
-    secondary: 'text-secondary-600',
-    white: 'text-white',
-    gray: 'text-gray-400',
-  };
-
-  const spinner = (
-    <div className="flex flex-col items-center justify-center">
-      <ImSpinner2 className={`animate-spin ${sizes[size]} ${colors[color]}`} />
-      {text && <p className="mt-3 text-gray-600">{text}</p>}
+  return (
+    <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
+      <div
+        className={`${sizeClasses[size]} border-primary-600 border-t-transparent rounded-full animate-spin`}
+      ></div>
+      {text && (
+        <p className="text-sm text-gray-600 dark:text-gray-400 animate-pulse">
+          {text}
+        </p>
+      )}
     </div>
   );
+}
 
-  if (fullScreen) {
-    return (
-      <div className="fixed inset-0 bg-white/80 backdrop-blur-sm flex items-center justify-center z-50">
-        {spinner}
-      </div>
-    );
-  }
-
-  return spinner;
+Loader.propTypes = {
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
+  text: PropTypes.string,
+  className: PropTypes.string,
 };
-
-export const PageLoader = ({ text = 'Loading...' }) => (
-  <div className="min-h-[400px] flex items-center justify-center">
-    <Loader size="lg" text={text} />
-  </div>
-);
-
-export const ButtonLoader = () => (
-  <ImSpinner2 className="w-5 h-5 animate-spin" />
-);
 
 export default Loader;

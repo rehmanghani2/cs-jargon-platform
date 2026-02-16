@@ -1,55 +1,66 @@
-const ProgressBar = ({
+import PropTypes from 'prop-types';
+
+function ProgressBar({
   value = 0,
   max = 100,
-  size = 'md',
-  color = 'primary',
+  size = 'medium',
+  variant = 'primary',
   showLabel = false,
-  labelPosition = 'right',
-  animated = false,
+  label,
   className = '',
-}) => {
+}) {
   const percentage = Math.min(Math.max((value / max) * 100, 0), 100);
 
   const sizes = {
-    sm: 'h-1.5',
-    md: 'h-2.5',
-    lg: 'h-4',
+    small: 'h-1',
+    medium: 'h-2',
+    large: 'h-3',
   };
 
-  const colors = {
+  const variants = {
     primary: 'bg-primary-600',
-    secondary: 'bg-secondary-600',
-    success: 'bg-success-500',
-    warning: 'bg-warning-500',
-    danger: 'bg-danger-500',
-    gradient: 'bg-gradient-to-r from-primary-500 to-secondary-500',
+    success: 'bg-success-600',
+    warning: 'bg-warning-600',
+    danger: 'bg-danger-600',
   };
 
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
-      {showLabel && labelPosition === 'left' && (
-        <span className="text-sm font-medium text-gray-700 min-w-[3rem]">
-          {Math.round(percentage)}%
-        </span>
+    <div className={className}>
+      {(showLabel || label) && (
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            {label}
+          </span>
+          {showLabel && (
+            <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              {Math.round(percentage)}%
+            </span>
+          )}
+        </div>
       )}
       
-      <div className={`flex-1 bg-gray-200 rounded-full overflow-hidden ${sizes[size]}`}>
+      <div className={`w-full bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden ${sizes[size]}`}>
         <div
-          className={`
-            ${sizes[size]} ${colors[color]} rounded-full transition-all duration-500 ease-out
-            ${animated ? 'animate-pulse' : ''}
-          `}
+          className={`${variants[variant]} ${sizes[size]} rounded-full transition-all duration-300 ease-out`}
           style={{ width: `${percentage}%` }}
+          role="progressbar"
+          aria-valuenow={value}
+          aria-valuemin={0}
+          aria-valuemax={max}
         />
       </div>
-      
-      {showLabel && labelPosition === 'right' && (
-        <span className="text-sm font-medium text-gray-700 min-w-[3rem]">
-          {Math.round(percentage)}%
-        </span>
-      )}
     </div>
   );
+}
+
+ProgressBar.propTypes = {
+  value: PropTypes.number,
+  max: PropTypes.number,
+  size: PropTypes.oneOf(['small', 'medium', 'large']),
+  variant: PropTypes.oneOf(['primary', 'success', 'warning', 'danger']),
+  showLabel: PropTypes.bool,
+  label: PropTypes.string,
+  className: PropTypes.string,
 };
 
 export default ProgressBar;

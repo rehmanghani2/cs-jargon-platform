@@ -1,67 +1,93 @@
-import api from './axios';
+import axios from './axios';
 
-export const userApi = {
-  // Complete profile (introduction page)
-  completeProfile: async (profileData) => {
-    const response = await api.put('/users/complete-profile', profileData);
+const userApi = {
+  // Get user profile
+  getProfile: async (userId) => {
+    const response = await axios.get(`/users/${userId}`);
     return response.data;
   },
-  
-  // Get profile
-  getProfile: async () => {
-    const response = await api.get('/users/profile');
+
+  // Update user profile
+  updateProfile: async (userId, userData) => {
+    const response = await axios.put(`/users/${userId}`, userData);
     return response.data;
   },
-  
-  // Update profile
-  updateProfile: async (profileData) => {
-    const response = await api.put('/users/profile', profileData);
-    return response.data;
-  },
-  
-  // Update profile picture
-  updateProfilePicture: async (formData) => {
-    const response = await api.put('/users/profile-picture', formData, {
+
+  // Upload profile picture
+  uploadProfilePicture: async (userId, formData) => {
+    const response = await axios.post(`/users/${userId}/avatar`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
     });
     return response.data;
   },
-  
-  // Get dashboard data
-  getDashboard: async () => {
-    const response = await api.get('/users/dashboard');
+
+  // Delete profile picture
+  deleteProfilePicture: async (userId) => {
+    const response = await axios.delete(`/users/${userId}/avatar`);
     return response.data;
   },
-  
-  // Get statistics
-  getStatistics: async () => {
-    const response = await api.get('/users/statistics');
+
+  // Get user stats
+  getUserStats: async (userId) => {
+    const response = await axios.get(`/users/${userId}/stats`);
     return response.data;
   },
-  
-  // Get activity feed
-  getActivityFeed: async (page = 1, limit = 20) => {
-    const response = await api.get(`/users/activity?page=${page}&limit=${limit}`);
+
+  // Get user badges
+  getUserBadges: async (userId) => {
+    const response = await axios.get(`/users/${userId}/badges`);
     return response.data;
   },
-  
+
+  // Get user certificates
+  getUserCertificates: async (userId) => {
+    const response = await axios.get(`/users/${userId}/certificates`);
+    return response.data;
+  },
+
+  // Get user activity
+  getUserActivity: async (userId, params) => {
+    const response = await axios.get(`/users/${userId}/activity`, { params });
+    return response.data;
+  },
+
+  // Get user streak
+  getUserStreak: async (userId) => {
+    const response = await axios.get(`/users/${userId}/streak`);
+    return response.data;
+  },
+
+  // Update user preferences
+  updatePreferences: async (userId, preferences) => {
+    const response = await axios.put(`/users/${userId}/preferences`, preferences);
+    return response.data;
+  },
+
   // Get leaderboard
-  getLeaderboard: async (type = 'points', limit = 10) => {
-    const response = await api.get(`/users/leaderboard?type=${type}&limit=${limit}`);
+  getLeaderboard: async (params) => {
+    const response = await axios.get('/users/leaderboard', { params });
     return response.data;
   },
-  
-  // Update learning preferences
-  updateLearningPreferences: async (preferences) => {
-    const response = await api.put('/users/learning-preferences', preferences);
+
+  // Search users
+  searchUsers: async (query) => {
+    const response = await axios.get('/users/search', {
+      params: { q: query },
+    });
     return response.data;
   },
-  
-  // Deactivate account
-  deactivateAccount: async (password) => {
-    const response = await api.put('/users/deactivate', { password });
+
+  // Get all users (admin only)
+  getAllUsers: async (params) => {
+    const response = await axios.get('/users', { params });
+    return response.data;
+  },
+
+  // Delete user (admin only)
+  deleteUser: async (userId) => {
+    const response = await axios.delete(`/users/${userId}`);
     return response.data;
   },
 };

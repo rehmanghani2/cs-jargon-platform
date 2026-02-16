@@ -1,157 +1,147 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Suspense, lazy } from 'react';
-
-// Layouts
-import DashboardLayout from '@/components/layout/DashboardLayout';
-import AuthLayout from '@/components/layout/AuthLayout';
-
-// Route Guards
+import { useAuth } from '@hooks/useAuth';
 import ProtectedRoute from './ProtectedRoute';
 import PublicRoute from './PublicRoute';
 
-// Loader
-import { PageLoader } from '@/components/common/Loader';
+// Layouts
+import DashboardLayout from '@components/layout/DashboardLayout';
+import AuthLayout from '@components/layout/AuthLayout';
 
-// Auth Pages (eager load for fast initial load)
-import LoginPage from '@/pages/auth/LoginPage';
-import RegisterPage from '@/pages/auth/RegisterPage';
-import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage';
-import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
-import VerifyEmailPage from '@/pages/auth/VerifyEmailPage';
+// Auth Pages
+import LoginPage from '@pages/auth/LoginPage';
+import RegisterPage from '@pages/auth/RegisterPage';
+import ForgotPasswordPage from '@pages/auth/ForgotPasswordPage';
+import ResetPasswordPage from '@pages/auth/ResetPasswordPage';
+import VerifyEmailPage from '@pages/auth/VerifyEmailPage';
+import OAuthCallback from '@pages/auth/OAuthCallback';
 
-// Lazy load other pages
-const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'));
-const IntroductionPage = lazy(() => import('@/pages/profile/IntroductionPage'));
-const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage'));
-const SettingsPage = lazy(() => import('@/pages/profile/SettingsPage'));
-const PlacementTestPage = lazy(() => import('@/pages/placement/PlacementTestPage'));
-const PlacementResultPage = lazy(() => import('@/pages/placement/PlacementResultPage'));
-const CoursesPage = lazy(() => import('@/pages/courses/CoursesPage'));
-const CourseDetailPage = lazy(() => import('@/pages/courses/CourseDetailPage'));
-const ModulePage = lazy(() => import('@/pages/courses/ModulePage'));
-const LessonPage = lazy(() => import('@/pages/courses/LessonPage'));
-const AssignmentsPage = lazy(() => import('@/pages/assignments/AssignmentsPage'));
-const AssignmentDetailPage = lazy(() => import('@/pages/assignments/AssignmentDetailPage'));
-const JargonLibraryPage = lazy(() => import('@/pages/jargon/JargonLibraryPage'));
-const JargonDetailPage = lazy(() => import('@/pages/jargon/JargonDetailPage'));
-const FlashcardsPage = lazy(() => import('@/pages/jargon/FlashcardsPage'));
-const NoticeBoardPage = lazy(() => import('@/pages/notice-board/NoticeBoardPage'));
-const ResourcesPage = lazy(() => import('@/pages/resources/ResourcesPage'));
-const CertificatesPage = lazy(() => import('@/pages/certificates/CertificatesPage'));
-const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
+// Main Pages
+import HomePage from '@pages/HomePage';
+import DashboardPage from '@pages/dashboard/DashboardPage';
+import NotFoundPage from '@pages/NotFoundPage';
 
-const AppRoutes = () => {
+// Profile Pages
+import ProfilePage from '@pages/profile/ProfilePage';
+import IntroductionPage from '@pages/profile/IntroductionPage';
+import SettingsPage from '@pages/profile/SettingsPage';
+
+// Placement Test Pages
+import PlacementTestPage from '@pages/placement/PlacementTestPage';
+import PlacementResultPage from '@pages/placement/PlacementResultPage';
+
+// Course Pages
+import CoursesPage from '@pages/courses/CoursesPage';
+import CourseDetailPage from '@pages/courses/CourseDetailPage';
+import ModulePage from '@pages/courses/ModulePage';
+import LessonPage from '@pages/courses/LessonPage';
+
+// Assignment Pages
+import AssignmentsPage from '@pages/assignments/AssignmentsPage';
+import AssignmentDetailPage from '@pages/assignments/AssignmentDetailPage';
+import SubmissionPage from '@pages/assignments/SubmissionPage';
+
+// Jargon Pages
+import JargonLibraryPage from '@pages/jargon/JargonLibraryPage';
+import JargonDetailPage from '@pages/jargon/JargonDetailPage';
+import FlashcardsPage from '@pages/jargon/FlashcardsPage';
+
+// Notice Board Pages
+import NoticeBoardPage from '@pages/notice-board/NoticeBoardPage';
+import AnnouncementPage from '@pages/notice-board/AnnouncementPage';
+import EventPage from '@pages/notice-board/EventPage';
+
+// Resource Pages
+import ResourcesPage from '@pages/resources/ResourcesPage';
+import ResourceDetailPage from '@pages/resources/ResourceDetailPage';
+import PathwaysPage from '@pages/resources/PathwaysPage';
+
+// Certificate Pages
+import CertificatesPage from '@pages/certificates/CertificatesPage';
+import CertificateViewPage from '@pages/certificates/CertificateViewPage';
+
+function AppRoutes() {
+  const { isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
+
   return (
-    <Suspense fallback={<PageLoader />}>
-      <Routes>
-        {/* Public routes */}
-        <Route
-          path="/login"
-          element={
-            <PublicRoute>
-              <LoginPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/register"
-          element={
-            <PublicRoute>
-              <RegisterPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/forgot-password"
-          element={
-            <PublicRoute>
-              <ForgotPasswordPage />
-            </PublicRoute>
-          }
-        />
-        <Route
-          path="/reset-password/:token"
-          element={
-            <PublicRoute>
-              <ResetPasswordPage />
-            </PublicRoute>
-          }
-        />
-        <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
+    <Routes>
+      {/* Public Home Route */}
+      <Route path="/" element={<HomePage />} />
 
-        {/* Introduction (requires auth but not profile) */}
-        <Route
-          path="/introduction"
-          element={
-            <ProtectedRoute>
-              <IntroductionPage />
-            </ProtectedRoute>
-          }
-        />
+      {/* Auth Routes */}
+      <Route element={<PublicRoute />}>
+        <Route element={<AuthLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+        </Route>
+      </Route>
 
-        {/* Placement test (requires auth and profile) */}
-        <Route
-          path="/placement-test"
-          element={
-            <ProtectedRoute requireProfile>
-              <PlacementTestPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/placement-result"
-          element={
-            <ProtectedRoute requireProfile>
-              <PlacementResultPage />
-            </ProtectedRoute>
-          }
-        />
+      {/* Email Verification */}
+      <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
-        {/* Protected routes with dashboard layout */}
-        <Route
-          element={
-            <ProtectedRoute requireProfile requirePlacement>
-              <DashboardLayout />
-            </ProtectedRoute>
-          }
-        >
+      {/* OAuth Callback */}
+      <Route path="/auth/callback" element={<OAuthCallback />} />
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route element={<DashboardLayout />}>
+          {/* Dashboard */}
           <Route path="/dashboard" element={<DashboardPage />} />
+
+          {/* Profile */}
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/introduction" element={<IntroductionPage />} />
           <Route path="/settings" element={<SettingsPage />} />
-          
+
+          {/* Placement Test */}
+          <Route path="/placement-test" element={<PlacementTestPage />} />
+          <Route path="/placement-test/result" element={<PlacementResultPage />} />
+
           {/* Courses */}
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/courses/:courseId" element={<CourseDetailPage />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModulePage />} />
-          <Route path="/courses/:courseId/modules/:moduleId/lessons/:lessonIndex" element={<LessonPage />} />
-          
+          <Route path="/courses/:courseId/modules/:moduleId/lessons/:lessonId" element={<LessonPage />} />
+
           {/* Assignments */}
           <Route path="/assignments" element={<AssignmentsPage />} />
           <Route path="/assignments/:assignmentId" element={<AssignmentDetailPage />} />
-          
-          {/* Jargon Library */}
-          <Route path="/jargons" element={<JargonLibraryPage />} />
-          <Route path="/jargons/:jargonId" element={<JargonDetailPage />} />
-          <Route path="/jargons/flashcards" element={<FlashcardsPage />} />
-          
+          <Route path="/assignments/:assignmentId/submit" element={<SubmissionPage />} />
+
+          {/* Jargon */}
+          <Route path="/jargon" element={<JargonLibraryPage />} />
+          <Route path="/jargon/:jargonId" element={<JargonDetailPage />} />
+          <Route path="/jargon/flashcards" element={<FlashcardsPage />} />
+
           {/* Notice Board */}
           <Route path="/notice-board" element={<NoticeBoardPage />} />
-          
+          <Route path="/notice-board/announcements/:id" element={<AnnouncementPage />} />
+          <Route path="/notice-board/events/:id" element={<EventPage />} />
+
           {/* Resources */}
           <Route path="/resources" element={<ResourcesPage />} />
-          
+          <Route path="/resources/:resourceId" element={<ResourceDetailPage />} />
+          <Route path="/resources/pathways" element={<PathwaysPage />} />
+
           {/* Certificates */}
           <Route path="/certificates" element={<CertificatesPage />} />
+          <Route path="/certificates/:certificateId" element={<CertificateViewPage />} />
         </Route>
+      </Route>
 
-        {/* Redirects */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        
-        {/* 404 */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </Suspense>
+      {/* 404 Not Found */}
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
-};
+}
 
 export default AppRoutes;

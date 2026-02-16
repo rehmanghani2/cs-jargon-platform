@@ -1,140 +1,283 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import Cookies from 'js-cookie';
-import { authApi } from '@/api/authApi';
-import { userApi } from '@/api/userApi';
+import { createContext, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import authApi from '@api/authApi';
+import { tokenManager, userManager } from '@utils/helpers';
+import toast from 'react-hot-toast';
 
-const AuthContext = createContext(null);
+export const AuthContext = createContext(null);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-export const AuthProvider = ({ children }) => {
+export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // Load user from storage on mount
+  // Initialize auth state from localStorage
   useEffect(() => {
-    const loadUser = async () => {
-      const token = Cookies.get('token') || localStorage.getItem('token');
-      
-      if (token) {
-        try {
-          const response = await authApi.getMe();
-          setUser(response.data.user);
+    const initAuth = async () => {
+      try {
+        const token = tokenManager.getToken();
+        const savedUser = userManager.getUser();
+
+        if (token && savedUser) {
+          // Verify token is still valid by fetching current user
+          const response = await authApi.getCurrentUser();
+          setUser(response.user);
           setIsAuthenticated(true);
-        } catch (error) {
-          console.error('Failed to load user:', error);
-          clearAuth();
+          
+          // Update saved user data
+          userManager.setUser(response.user);
+        } else {
+          // No valid auth state
+          setIsAuthenticated(false);
+          setUser(null);
         }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        // Invalid token, clear everything
+        logout(false);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
-    loadUser();
+    initAuth();
   }, []);
 
-  // Clear auth data
-  const clearAuth = useCallback(() => {
-    Cookies.remove('token');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setIsAuthenticated(false);
-  }, []);
-
-  // Login
-  const login = useCallback(async (credentials) => {
-    const response = await authApi.login(credentials);
-    
-    if (response.success) {
-      const { token, data } = response;
+  // Register new user
+  const register = async (userData) => {
+    try {
+      setIsLoading(true);
+      const response = await authApi.register(userData);
       
-      // Store token
-      Cookies.set('token', token, { expires: 30 });
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(data.user));
+      const { token, user: newUser } = response;
       
-      setUser(data.user);
+      // Save token and user
+      tokenManager.setToken(token);
+      userManager.setUser(newUser);
+      
+      setUser(newUser);
       setIsAuthenticated(true);
       
-      return data.user;
+      toast.success('Registration successful! Welcome aboard!');
+      navigate('/introduction');
+      
+      return { success: true, user: newUser };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Registration failed';
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setIsLoading(false);
     }
-    
-    throw new Error(response.message);
-  }, []);
+  };
 
-  // Register
-  const register = useCallback(async (formData) => {
-    const response = await authApi.register(formData);
-    return response;
-  }, []);
+  // Login user
+  const login = async (credentials) => {
+    try {
+      setIsLoading(true);
+      const response = await authApi.login(credentials);
+      
+      const { token, refreshToken, user: loggedInUser } = response;
+      
+      // Save tokens and user
+      tokenManager.setToken(token);
+      if (refreshToken) {
+        tokenManager.setRefreshToken(refreshToken);
+      }
+      userManager.setUser(loggedInUser);
+      
+      setUser(loggedInUser);
+      setIsAuthenticated(true);
+      
+      toast.success(`Welcome back, ${loggedInUser.name}! 👋`);
+      
+      // Redirect based on user state
+      if (!loggedInUser.hasCompletedIntroduction) {
+        navigate('/introduction');
+      } else {
+        navigate('/dashboard');
+      }
+      
+      return { success: true, user: loggedInUser };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Login failed';
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  // Logout
-  const logout = useCallback(async () => {
+  // Logout user
+  const logout = async (showToast = true) => {
     try {
       await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      clearAuth();
+      // Clear all auth data
+      tokenManager.clearTokens();
+      userManager.removeUser();
+      
+      setUser(null);
+      setIsAuthenticated(false);
+      
+      if (showToast) {
+        toast.success('Logged out successfully');
+      }
+      
+      navigate('/login');
     }
-  }, [clearAuth]);
+  };
 
-  // Update user data
-  const updateUser = useCallback((userData) => {
-    setUser(prev => ({ ...prev, ...userData }));
-    localStorage.setItem('user', JSON.stringify({ ...user, ...userData }));
-  }, [user]);
+  // Update user profile
+  const updateUser = (updates) => {
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    userManager.setUser(updatedUser);
+  };
 
-  // Refresh user data from server
-  const refreshUser = useCallback(async () => {
+  // Refresh user data
+  const refreshUser = async () => {
     try {
-      const response = await authApi.getMe();
-      setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
-      return response.data.user;
+      const response = await authApi.getCurrentUser();
+      setUser(response.user);
+      userManager.setUser(response.user);
+      return response.user;
     } catch (error) {
-      console.error('Failed to refresh user:', error);
-      throw error;
+      console.error('Error refreshing user:', error);
+      return null;
     }
-  }, []);
+  };
 
-  // Check if profile is complete
-  const isProfileComplete = user?.isProfileComplete ?? false;
+  // Change password
+  const changePassword = async (passwordData) => {
+    try {
+      await authApi.changePassword(passwordData);
+      toast.success('Password changed successfully');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to change password';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
 
-  // Check if placement test is completed
-  const hasCompletedPlacement = user?.placementTestCompleted ?? false;
+  // Forgot password
+  const forgotPassword = async (email) => {
+    try {
+      await authApi.forgotPassword(email);
+      toast.success('Password reset link sent to your email');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send reset link';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
 
-  // Get user's assigned level
-  const assignedLevel = user?.assignedLevel ?? null;
+  // Reset password
+  const resetPassword = async (token, password) => {
+    try {
+      await authApi.resetPassword(token, password);
+      toast.success('Password reset successfully');
+      navigate('/login');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to reset password';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
+  // Verify email
+  const verifyEmail = async (token) => {
+    try {
+      const response = await authApi.verifyEmail(token);
+      toast.success('Email verified successfully! 🎉');
+      
+      if (isAuthenticated) {
+        // Update current user
+        updateUser({ emailVerified: true });
+      }
+      
+      return { success: true, data: response };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Email verification failed';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
+  // Resend verification email
+  const resendVerification = async (email) => {
+    try {
+      await authApi.resendVerification(email);
+      toast.success('Verification email sent');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Failed to send verification email';
+      toast.error(message);
+      return { success: false, error: message };
+    }
+  };
+
+  // OAuth login
+  const oauthLogin = async (provider, code) => {
+    try {
+      setIsLoading(true);
+      let response;
+      
+      if (provider === 'google') {
+        response = await authApi.googleAuth(code);
+      } else if (provider === 'github') {
+        response = await authApi.githubAuth(code);
+      }
+      
+      const { token, refreshToken, user: oauthUser } = response;
+      
+      // Save tokens and user
+      tokenManager.setToken(token);
+      if (refreshToken) {
+        tokenManager.setRefreshToken(refreshToken);
+      }
+      userManager.setUser(oauthUser);
+      
+      setUser(oauthUser);
+      setIsAuthenticated(true);
+      
+      toast.success(`Welcome, ${oauthUser.name}! 👋`);
+      navigate('/dashboard');
+      
+      return { success: true, user: oauthUser };
+    } catch (error) {
+      const message = error.response?.data?.message || 'OAuth login failed';
+      toast.error(message);
+      return { success: false, error: message };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const value = {
     user,
-    isLoading,
     isAuthenticated,
-    isProfileComplete,
-    hasCompletedPlacement,
-    assignedLevel,
-    login,
+    isLoading,
     register,
+    login,
     logout,
     updateUser,
     refreshUser,
-    clearAuth,
+    changePassword,
+    forgotPassword,
+    resetPassword,
+    verifyEmail,
+    resendVerification,
+    oauthLogin,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
 
 export default AuthContext;

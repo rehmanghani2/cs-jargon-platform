@@ -1,19 +1,25 @@
-const Avatar = ({
+import PropTypes from 'prop-types';
+import { getInitials } from '@utils/helpers';
+
+function Avatar({
   src,
-  alt = 'Avatar',
-  name = '',
-  size = 'md',
+  alt,
+  name,
+  size = 'medium',
+  shape = 'circle',
+  status,
   className = '',
-  showStatus = false,
-  status = 'online',
-}) => {
+}) {
   const sizes = {
-    xs: 'w-6 h-6 text-xs',
-    sm: 'w-8 h-8 text-sm',
-    md: 'w-10 h-10 text-base',
-    lg: 'w-12 h-12 text-lg',
-    xl: 'w-16 h-16 text-xl',
-    '2xl': 'w-24 h-24 text-2xl',
+    small: 'w-8 h-8 text-xs',
+    medium: 'w-10 h-10 text-sm',
+    large: 'w-12 h-12 text-base',
+    xlarge: 'w-16 h-16 text-lg',
+  };
+
+  const shapes = {
+    circle: 'rounded-full',
+    square: 'rounded-lg',
   };
 
   const statusColors = {
@@ -23,13 +29,11 @@ const Avatar = ({
     away: 'bg-warning-500',
   };
 
-  const getInitials = (name) => {
-    return name
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  const statusSizes = {
+    small: 'w-2 h-2',
+    medium: 'w-2.5 h-2.5',
+    large: 'w-3 h-3',
+    xlarge: 'w-4 h-4',
   };
 
   return (
@@ -37,31 +41,43 @@ const Avatar = ({
       {src ? (
         <img
           src={src}
-          alt={alt}
-          className={`${sizes[size]} rounded-full object-cover ring-2 ring-white`}
+          alt={alt || name}
+          className={`object-cover ${sizes[size]} ${shapes[shape]}`}
         />
       ) : (
         <div
           className={`
-            ${sizes[size]} rounded-full bg-gradient-to-br from-primary-400 to-secondary-500
-            flex items-center justify-center text-white font-medium ring-2 ring-white
+            flex items-center justify-center font-medium
+            bg-primary-600 text-white
+            ${sizes[size]} ${shapes[shape]}
           `}
         >
-          {name ? getInitials(name) : '?'}
+          {getInitials(name || alt)}
         </div>
       )}
-      
-      {showStatus && (
+
+      {status && (
         <span
           className={`
-            absolute bottom-0 right-0 block rounded-full ring-2 ring-white
+            absolute bottom-0 right-0 block rounded-full
+            border-2 border-white dark:border-gray-800
             ${statusColors[status]}
-            ${size === 'xs' || size === 'sm' ? 'w-2 h-2' : 'w-3 h-3'}
+            ${statusSizes[size]}
           `}
         />
       )}
     </div>
   );
+}
+
+Avatar.propTypes = {
+  src: PropTypes.string,
+  alt: PropTypes.string,
+  name: PropTypes.string,
+  size: PropTypes.oneOf(['small', 'medium', 'large', 'xlarge']),
+  shape: PropTypes.oneOf(['circle', 'square']),
+  status: PropTypes.oneOf(['online', 'offline', 'busy', 'away']),
+  className: PropTypes.string,
 };
 
 export default Avatar;
