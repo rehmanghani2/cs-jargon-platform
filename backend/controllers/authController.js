@@ -8,8 +8,15 @@ const { validationResult } = require('express-validator');
 // @access  Public
 exports.register = async (req, res, next) => {
     try {
+        const { fullName, email, password } = req.body;
+        
+        console.log("{ fullName, email, password }: ",  fullName, email, password )
+
         // Validate request
         const errors = validationResult(req);
+
+        console.log("errors: ", errors)
+
         if (!errors.isEmpty()) {
             return res.status(400).json({
                 success: false,
@@ -17,7 +24,9 @@ exports.register = async (req, res, next) => {
             });
         }
 
-        const { fullName, email, password } = req.body;
+        // const { fullName, email, password } = req.body;
+
+        console.log("{ fullName, email, password }: ",  fullName, email, password )
 
         // Check if user already exists
         const existingUser = await User.findOne({ email });
@@ -40,46 +49,27 @@ exports.register = async (req, res, next) => {
             email,
             password,
             profilePicture,
+            isEmailVerified: true,
             authProvider: 'local'
         });
 
-        // Generate verification token
-        const verificationToken = user.generateVerificationToken();
-        await user.save({ validateBeforeSave: false });
+        // Generate token for auto-login after creation
+        const token = user.getSignedJwtToken();
 
-        // Create verification URL
-        const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${verificationToken}`;
-
-        // Send verification email
-        try {
-            await sendEmail({
+        res.status(201).json({
+            success: true,
+            message: 'Registration successful! Welcome to CS Jargon Platform.',
+            token,
+            user: {
+                id: user._id,
+                fullName: user.fullName,
                 email: user.email,
-                subject: 'Verify Your Email - CS Jargon Platform',
-                html: emailTemplates.verificationEmail(user.fullName, verificationUrl)
-            });
-
-            res.status(201).json({
-                success: true,
-                message: 'Registration successful! Please check your email to verify your account.',
-                data: {
-                    userId: user._id,
-                    email: user.email
-                }
-            });
-        } catch (emailError) {
-            // If email fails, still create user but inform about verification
-            console.error('Email sending failed:', emailError);
-            
-            res.status(201).json({
-                success: true,
-                message: 'Registration successful! However, we could not send verification email. Please request a new one.',
-                data: {
-                    userId: user._id,
-                    email: user.email,
-                    emailSent: false
-                }
-            });
-        }
+                profilePicture: user.profilePicture,
+                role: user.role,
+                isProfileComplete: user.isProfileComplete,
+                placementTestCompleted: user.placementTestCompleted
+            }
+        });
 
     } catch (error) {
         next(error);

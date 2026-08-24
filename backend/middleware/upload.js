@@ -59,3 +59,9 @@ exports.uploadAssignment = multer({
     limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
     fileFilter: fileFilter
 }).single('assignment');
+
+// Add this at the end of middleware/upload.js
+exports.upload = multer({ 
+    storage: storage,
+    limits: { fileSize: 2 * 1024 * 1024 } // 2MB for JSON/CSV imports
+});

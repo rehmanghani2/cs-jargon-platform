@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Card from '@components/common/Card';
 import Button from '@components/common/Button';
 import ProgressBar from '@components/common/ProgressBar';
@@ -70,29 +71,27 @@ function PlacementTestPage() {
 
   const progress = ((currentQuestion + 1) / questions.length) * 100;
   const answeredCount = Object.keys(answers).length;
-  const unansweredCount = questions.length - answeredCount;
-
   const handleStart = () => {
     setHasStarted(true);
-    // Start timer
+    toast.success('Test started! You have 30 minutes.');
   };
 
   const handleAnswer = (questionId, optionIndex) => {
-    setAnswers({
-      ...answers,
+    setAnswers(prev => ({
+      ...prev,
       [questionId]: optionIndex,
-    });
+    }));
   };
 
   const handleNext = () => {
     if (currentQuestion < questions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
+      setCurrentQuestion(prev => prev + 1);
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
+      setCurrentQuestion(prev => prev - 1);
     }
   };
 
@@ -101,7 +100,7 @@ function PlacementTestPage() {
   };
 
   const confirmSubmit = () => {
-    // Calculate score and navigate to results
+    toast.success('Test submitted successfully! Processing results...');
     navigate('/placement-test/result');
   };
 
@@ -110,6 +109,53 @@ function PlacementTestPage() {
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Active Timer Interval
+  useEffect(() => {
+    let timer;
+    if (hasStarted && timeRemaining > 0) {
+      timer = setInterval(() => {
+        setTimeRemaining((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer);
+            setShowSubmitModal(true);
+            toast.error('Time is up! Submitting your placement test...', { id: 'time-up' });
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [hasStarted, timeRemaining]);
+
+  // Keyboard navigation for questions
+  useEffect(() => {
+    if (!hasStarted) return;
+
+    const handleKeyDown = (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+
+      const q = questions[currentQuestion];
+
+      if (['1', '2', '3', '4'].includes(e.key)) {
+        const optionIdx = parseInt(e.key, 10) - 1;
+        if (q && q.options[optionIdx] !== undefined) {
+          handleAnswer(q.id, optionIdx);
+          toast.success(`Selected Option ${e.key}`, { id: 'opt-toast', duration: 1000 });
+        }
+      } else if (e.key === 'ArrowRight' || (e.key === 'Enter' && !showSubmitModal)) {
+        e.preventDefault();
+        handleNext();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        handlePrevious();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hasStarted, currentQuestion, answers, showSubmitModal]);
 
   if (!hasStarted) {
     return (

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Card from '@components/common/Card';
 import Badge from '@components/common/Badge';
 import SearchInput from '@components/common/SearchInput';
@@ -7,13 +8,12 @@ import Tabs from '@components/common/Tabs';
 import EmptyState from '@components/common/EmptyState';
 import Button from '@components/common/Button';
 import { FiBell, FiCalendar, FiClock, FiMapPin, FiUsers } from 'react-icons/fi';
-import { formatDate, formatTime } from '@utils/formatters';
+import { formatDate } from '@utils/formatters';
 
 function NoticeBoardPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Mock data
-  const announcements = [
+  const [announcements] = useState([
     {
       id: 1,
       title: 'New Course: Advanced Machine Learning',
@@ -41,9 +41,9 @@ function NoticeBoardPage() {
       priority: 'low',
       pinned: false,
     },
-  ];
+  ]);
 
-  const events = [
+  const [events, setEvents] = useState([
     {
       id: 1,
       title: 'Web Development Workshop',
@@ -77,7 +77,31 @@ function NoticeBoardPage() {
       maxAttendees: 100,
       registered: false,
     },
-  ];
+  ]);
+
+  const handleRegisterEvent = (eventId) => {
+    setEvents(prev => prev.map(ev => {
+      if (ev.id === eventId && !ev.registered) {
+        toast.success(`Registered for "${ev.title}"! 🎉`);
+        return {
+          ...ev,
+          registered: true,
+          attendees: ev.attendees + 1
+        };
+      }
+      return ev;
+    }));
+  };
+
+  const filteredAnnouncements = announcements.filter(a => 
+    a.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    a.content.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredEvents = events.filter(e => 
+    e.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+    e.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const getPriorityColor = (priority) => {
     const colors = {
@@ -164,18 +188,16 @@ function NoticeBoardPage() {
           <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
             {event.registered ? (
               <Button variant="outline" fullWidth disabled>
-                Already Registered
+                ✓ Already Registered
               </Button>
             ) : isFull ? (
               <Button variant="ghost" fullWidth disabled>
                 Event Full
               </Button>
             ) : (
-              <Link to={`/notice-board/events/${event.id}`}>
-                <Button variant="primary" fullWidth>
-                  Register Now
-                </Button>
-              </Link>
+              <Button variant="primary" fullWidth onClick={() => handleRegisterEvent(event.id)}>
+                Register Now
+              </Button>
             )}
           </div>
         </div>
@@ -185,15 +207,15 @@ function NoticeBoardPage() {
 
   const announcementsTab = (
     <div>
-      {announcements.length === 0 ? (
+      {filteredAnnouncements.length === 0 ? (
         <EmptyState
           icon={FiBell}
-          title="No announcements"
-          description="There are no announcements at this time."
+          title="No announcements found"
+          description="Try adjusting your search query."
         />
       ) : (
         <div className="space-y-4">
-          {announcements.map((announcement) => (
+          {filteredAnnouncements.map((announcement) => (
             <AnnouncementCard key={announcement.id} announcement={announcement} />
           ))}
         </div>
@@ -203,15 +225,15 @@ function NoticeBoardPage() {
 
   const eventsTab = (
     <div>
-      {events.length === 0 ? (
+      {filteredEvents.length === 0 ? (
         <EmptyState
           icon={FiCalendar}
-          title="No upcoming events"
-          description="There are no events scheduled at this time."
+          title="No upcoming events found"
+          description="Try adjusting your search query."
         />
       ) : (
         <div className="grid md:grid-cols-2 gap-6">
-          {events.map((event) => (
+          {filteredEvents.map((event) => (
             <EventCard key={event.id} event={event} />
           ))}
         </div>
@@ -248,13 +270,13 @@ function NoticeBoardPage() {
             label: 'Announcements',
             content: announcementsTab,
             icon: <FiBell className="w-4 h-4" />,
-            badge: announcements.length,
+            badge: filteredAnnouncements.length,
           },
           {
             label: 'Events',
             content: eventsTab,
             icon: <FiCalendar className="w-4 h-4" />,
-            badge: events.length,
+            badge: filteredEvents.length,
           },
         ]}
       />

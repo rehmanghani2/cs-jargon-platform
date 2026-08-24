@@ -45,7 +45,7 @@ const authApi = {
 
   // Change password
   changePassword: async (passwordData) => {
-    const response = await axios.post('/auth/change-password', passwordData);
+    const response = await axios.put('/auth/update-password', passwordData);
     return response.data;
   },
 

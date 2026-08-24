@@ -50,21 +50,26 @@ export function AuthProvider({ children }) {
       setIsLoading(true);
       const response = await authApi.register(userData);
       
-      const { token, user: newUser } = response;
+      const token = response.token;
+      const newUser = response.user || response.data?.user;
       
-      // Save token and user
-      tokenManager.setToken(token);
-      userManager.setUser(newUser);
-      
-      setUser(newUser);
-      setIsAuthenticated(true);
-      
-      toast.success('Registration successful! Welcome aboard!');
-      navigate('/introduction');
+      if (token) {
+        tokenManager.setToken(token);
+        if (newUser) userManager.setUser(newUser);
+        
+        setUser(newUser);
+        setIsAuthenticated(true);
+        
+        toast.success(response.message || 'Registration successful! Welcome aboard!');
+        navigate('/introduction');
+      } else {
+        toast.success(response.message || 'Registration successful! Please sign in.');
+        navigate('/login');
+      }
       
       return { success: true, user: newUser };
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed';
+      const message = error.response?.data?.message || error.response?.data?.errors?.[0]?.msg || 'Registration failed';
       toast.error(message);
       return { success: false, error: message };
     } finally {
@@ -78,30 +83,30 @@ export function AuthProvider({ children }) {
       setIsLoading(true);
       const response = await authApi.login(credentials);
       
-      const { token, refreshToken, user: loggedInUser } = response;
+      const token = response.token;
+      const loggedInUser = response.user || response.data?.user;
       
-      // Save tokens and user
-      tokenManager.setToken(token);
-      if (refreshToken) {
-        tokenManager.setRefreshToken(refreshToken);
-      }
-      userManager.setUser(loggedInUser);
-      
-      setUser(loggedInUser);
-      setIsAuthenticated(true);
-      
-      toast.success(`Welcome back, ${loggedInUser.name}! 👋`);
-      
-      // Redirect based on user state
-      if (!loggedInUser.hasCompletedIntroduction) {
-        navigate('/introduction');
-      } else {
-        navigate('/dashboard');
+      if (token) {
+        tokenManager.setToken(token);
+        if (loggedInUser) userManager.setUser(loggedInUser);
+        
+        setUser(loggedInUser);
+        setIsAuthenticated(true);
+        
+        toast.success(`Welcome back, ${loggedInUser?.fullName || loggedInUser?.name || 'User'}! 👋`);
+        
+        if (loggedInUser && !loggedInUser.isProfileComplete) {
+          navigate('/introduction');
+        } else if (loggedInUser && !loggedInUser.placementTestCompleted) {
+          navigate('/placement-test');
+        } else {
+          navigate('/dashboard');
+        }
       }
       
       return { success: true, user: loggedInUser };
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed';
+      const message = error.response?.data?.message || error.response?.data?.errors?.[0]?.msg || 'Login failed';
       toast.error(message);
       return { success: false, error: message };
     } finally {

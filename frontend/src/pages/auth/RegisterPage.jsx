@@ -18,7 +18,8 @@ function RegisterPage() {
 
   const form = useForm(
     {
-      name: '',
+      // name: '',
+      fullName: '',
       email: '',
       password: '',
       confirmPassword: '',
@@ -33,8 +34,11 @@ function RegisterPage() {
     // Validate
     const { isValid, errors } = validateRegistration(form.values);
     
+    console.log("isValid: ", isValid)
+
     if (!isValid) {
       form.setErrors(errors);
+
       return;
     }
 
@@ -62,13 +66,13 @@ function RegisterPage() {
         <Input
           label="Full name"
           type="text"
-          name="name"
+          name="fullName"
           placeholder="John Doe"
           leftIcon={<FiUser className="w-5 h-5" />}
-          value={form.values.name}
+          value={form.values.fullName}
           onChange={form.handleChange}
           onBlur={form.handleBlur}
-          error={form.touched.name && form.errors.name}
+          error={form.touched.fullName && form.errors.fullName}
           fullWidth
         />
 

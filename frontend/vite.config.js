@@ -15,6 +15,8 @@ export default defineConfig({
       '@hooks': path.resolve(__dirname, './src/hooks'),
       '@context': path.resolve(__dirname, './src/context'),
       '@styles': path.resolve(__dirname, './src/styles'),
+      // This tells Vite that @routes refers to your actual folder
+      '@routes': path.resolve(__dirname, './src/routes'),
     },
   },
   server: {

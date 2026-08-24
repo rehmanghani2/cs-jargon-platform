@@ -287,10 +287,11 @@ export const validateRegistration = (formData) => {
   const errors = {};
 
   // Name validation
-  if (!isRequired(formData.name)) {
-    errors.name = ERROR_MESSAGES.REQUIRED;
-  } else if (!minLength(formData.name, 2)) {
-    errors.name = 'Name must be at least 2 characters';
+  const nameValue = formData.fullName || formData.name;
+  if (!isRequired(nameValue)) {
+    errors.fullName = ERROR_MESSAGES.REQUIRED;
+  } else if (!minLength(nameValue, 2)) {
+    errors.fullName = 'Name must be at least 2 characters';
   }
 
   // Email validation

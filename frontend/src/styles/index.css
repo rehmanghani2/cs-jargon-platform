@@ -163,7 +163,9 @@
 /* Base styles */
 @layer base {
   * {
-    @apply border-border;
+    /* @apply border-border; */
+    @apply border-gray-200;
+    /* @apply border-gray-200; Change from border-border to border-gray-200 */
   }
   
   body {
@@ -268,6 +270,7 @@
   .spinner {
     @apply inline-block w-6 h-6 border-3 border-t-transparent 
            border-primary-600 rounded-full animate-spin;
+    /* @apply inline-block w-6 h-6 border-2 border-t-transparent ... */
   }
 
   /* Progress bar */

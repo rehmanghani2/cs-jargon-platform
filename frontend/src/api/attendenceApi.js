@@ -1,88 +1,45 @@
 import axios from './axios';
 
 const attendanceApi = {
-  // Mark attendance
-  markAttendance: async (attendanceData) => {
-    const response = await axios.post('/attendance', attendanceData);
+  // Start session
+  startSession: async () => {
+    const response = await axios.post('/attendance/session/start');
     return response.data;
   },
 
-  // Get user attendance
-  getUserAttendance: async (userId, params) => {
-    const response = await axios.get(`/users/${userId}/attendance`, { params });
+  // End session
+  endSession: async (sessionData) => {
+    const response = await axios.post('/attendance/session/end', sessionData);
     return response.data;
   },
 
-  // Get course attendance
-  getCourseAttendance: async (courseId, params) => {
-    const response = await axios.get(`/courses/${courseId}/attendance`, { params });
+  // Log activity time
+  logActivity: async (activityData) => {
+    const response = await axios.post('/attendance/activity', activityData);
     return response.data;
   },
 
-  // Get attendance by date
-  getAttendanceByDate: async (date) => {
-    const response = await axios.get('/attendance/date', {
-      params: { date },
-    });
+  // Get today's attendance
+  getToday: async () => {
+    const response = await axios.get('/attendance/today');
     return response.data;
   },
 
-  // Get attendance statistics
-  getAttendanceStats: async (userId) => {
-    const response = await axios.get(`/users/${userId}/attendance/stats`);
+  // Get attendance summary
+  getSummary: async () => {
+    const response = await axios.get('/attendance/summary');
     return response.data;
   },
 
-  // Update attendance
-  updateAttendance: async (attendanceId, status) => {
-    const response = await axios.put(`/attendance/${attendanceId}`, { status });
+  // Get weekly activity report
+  getWeeklyActivity: async () => {
+    const response = await axios.get('/attendance/weekly');
     return response.data;
   },
 
-  // Delete attendance record
-  deleteAttendance: async (attendanceId) => {
-    const response = await axios.delete(`/attendance/${attendanceId}`);
-    return response.data;
-  },
-
-  // Get attendance report
-  getAttendanceReport: async (params) => {
-    const response = await axios.get('/attendance/report', { params });
-    return response.data;
-  },
-
-  // Export attendance
-  exportAttendance: async (params) => {
-    const response = await axios.get('/attendance/export', {
-      params,
-      responseType: 'blob',
-    });
-    return response.data;
-  },
-
-  // Get student attendance summary
-  getStudentSummary: async (userId, courseId) => {
-    const response = await axios.get(`/users/${userId}/courses/${courseId}/attendance/summary`);
-    return response.data;
-  },
-
-  // Get class attendance for date
-  getClassAttendance: async (courseId, date) => {
-    const response = await axios.get(`/courses/${courseId}/attendance/date`, {
-      params: { date },
-    });
-    return response.data;
-  },
-
-  // Bulk mark attendance
-  bulkMarkAttendance: async (attendanceRecords) => {
-    const response = await axios.post('/attendance/bulk', { records: attendanceRecords });
-    return response.data;
-  },
-
-  // Request attendance correction
-  requestCorrection: async (attendanceId, reason) => {
-    const response = await axios.post(`/attendance/${attendanceId}/correction`, { reason });
+  // Get attendance history
+  getHistory: async (params) => {
+    const response = await axios.get('/attendance/history', { params });
     return response.data;
   },
 };

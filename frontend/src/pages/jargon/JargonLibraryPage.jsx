@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import Card from '@components/common/Card';
 import Button from '@components/common/Button';
 import Badge from '@components/common/Badge';
@@ -8,10 +9,10 @@ import Select from '@components/common/Select';
 import EmptyState from '@components/common/EmptyState';
 import { 
   FiBook, 
-  FiBookmark, 
   FiCheckCircle, 
   FiStar,
-  FiZap
+  FiZap,
+  FiVolume2
 } from 'react-icons/fi';
 
 function JargonLibraryPage() {
@@ -19,8 +20,7 @@ function JargonLibraryPage() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDifficulty, setSelectedDifficulty] = useState('all');
 
-  // Mock data
-  const jargonTerms = [
+  const [jargonTerms, setJargonTerms] = useState([
     {
       id: 1,
       term: 'Algorithm',
@@ -71,15 +71,14 @@ function JargonLibraryPage() {
       learned: true,
       favorite: false,
     },
-  ];
+  ]);
 
   const categories = [
     { value: 'all', label: 'All Categories' },
     { value: 'programming', label: 'Programming' },
     { value: 'algorithms', label: 'Algorithms' },
     { value: 'data_structures', label: 'Data Structures' },
-    { value: 'web', label: 'Web Development' },
-    { value: 'database', label: 'Database' },
+    { value: 'software engineering', label: 'Software Engineering' },
     { value: 'devops', label: 'DevOps' },
   ];
 
@@ -99,6 +98,40 @@ function JargonLibraryPage() {
     return colors[difficulty] || 'gray';
   };
 
+  const handleToggleFavorite = (id, e) => {
+    e.stopPropagation();
+    setJargonTerms(prev => prev.map(item => {
+      if (item.id === id) {
+        const nextFav = !item.favorite;
+        toast.success(nextFav ? `Added "${item.term}" to Favorites ⭐` : `Removed "${item.term}" from Favorites`);
+        return { ...item, favorite: nextFav };
+      }
+      return item;
+    }));
+  };
+
+  const handleSpeak = (term, e) => {
+    e.stopPropagation();
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(term);
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+      toast.success(`Pronouncing: "${term}"`, { id: 'speech-lib' });
+    }
+  };
+
+  // Real-time filtering
+  const filteredJargons = jargonTerms.filter((jargon) => {
+    const matchesSearch = jargon.term.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      jargon.definition.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesCategory = selectedCategory === 'all' || 
+      jargon.category.toLowerCase() === selectedCategory.toLowerCase();
+    const matchesDifficulty = selectedDifficulty === 'all' || 
+      jargon.difficulty.toLowerCase() === selectedDifficulty.toLowerCase();
+    return matchesSearch && matchesCategory && matchesDifficulty;
+  });
+
   const stats = {
     total: jargonTerms.length,
     learned: jargonTerms.filter(j => j.learned).length,
@@ -106,38 +139,48 @@ function JargonLibraryPage() {
   };
 
   const JargonCard = ({ jargon }) => (
-    <Card hover>
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex-1">
-          <Link to={`/jargon/${jargon.id}`}>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-              {jargon.term}
-            </h3>
-          </Link>
+    <Card hover className="flex flex-col justify-between h-full border hover:border-primary-400 transition-all">
+      <div>
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex-1 pr-2">
+            <Link to={`/jargon/${jargon.id}`}>
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                {jargon.term}
+              </h3>
+            </Link>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={(e) => handleSpeak(jargon.term, e)}
+              className="p-1.5 text-gray-400 hover:text-primary-600 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              title="Listen to pronunciation"
+            >
+              <FiVolume2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => handleToggleFavorite(jargon.id, e)}
+              className={`p-1.5 rounded-full transition-colors ${
+                jargon.favorite
+                  ? 'text-yellow-500 bg-yellow-50 dark:bg-yellow-900/30'
+                  : 'text-gray-400 hover:text-yellow-500 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              title={jargon.favorite ? 'Unfavorite' : 'Add to Favorites'}
+            >
+              <FiStar className="w-4 h-4 fill-current" />
+            </button>
+            <Badge variant={getDifficultyColor(jargon.difficulty)} size="small">
+              {jargon.difficulty}
+            </Badge>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant={getDifficultyColor(jargon.difficulty)} size="small">
-            {jargon.difficulty}
-          </Badge>
-          {jargon.learned && (
-            <div className="w-6 h-6 bg-success-100 dark:bg-success-900/30 rounded-full flex items-center justify-center">
-              <FiCheckCircle className="w-4 h-4 text-success-600" />
-            </div>
-          )}
-          {jargon.favorite && (
-            <div className="w-6 h-6 bg-warning-100 dark:bg-warning-900/30 rounded-full flex items-center justify-center">
-              <FiStar className="w-4 h-4 text-warning-600" />
-            </div>
-          )}
-        </div>
+
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-3 line-clamp-3 leading-relaxed">
+          {jargon.definition}
+        </p>
       </div>
 
-      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
-        {jargon.definition}
-      </p>
-
-      <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
-        <span className="text-sm text-gray-600 dark:text-gray-400">
+      <div className="flex items-center justify-between pt-3 border-t border-gray-100 dark:border-gray-700 mt-4">
+        <span className="text-xs font-semibold px-2.5 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-md">
           {jargon.category}
         </span>
         <Link to={`/jargon/${jargon.id}`}>
@@ -157,8 +200,8 @@ function JargonLibraryPage() {
           <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white">
             Jargon Library
           </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Master computer science terminology
+          <p className="mt-1 text-gray-600 dark:text-gray-400">
+            Search, listen, and master computer science vocabulary
           </p>
         </div>
         <Link to="/jargon/flashcards">
@@ -170,66 +213,48 @@ function JargonLibraryPage() {
 
       {/* Stats */}
       <div className="grid md:grid-cols-3 gap-6">
-        <Card>
+        <Card className="border-l-4 border-l-primary-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Total Terms</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Terms</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.total}
               </p>
             </div>
-            <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-xl flex items-center justify-center">
               <FiBook className="w-6 h-6 text-primary-600" />
             </div>
           </div>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-success-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Learned</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Learned</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.learned}
               </p>
             </div>
-            <div className="w-12 h-12 bg-success-100 dark:bg-success-900/30 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-success-100 dark:bg-success-900/30 rounded-xl flex items-center justify-center">
               <FiCheckCircle className="w-6 h-6 text-success-600" />
             </div>
           </div>
         </Card>
 
-        <Card>
+        <Card className="border-l-4 border-l-warning-500">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Favorites</p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Favorites</p>
+              <p className="text-3xl font-bold text-gray-900 dark:text-white">
                 {stats.favorites}
               </p>
             </div>
-            <div className="w-12 h-12 bg-warning-100 dark:bg-warning-900/30 rounded-lg flex items-center justify-center">
+            <div className="w-12 h-12 bg-warning-100 dark:bg-warning-900/30 rounded-xl flex items-center justify-center">
               <FiStar className="w-6 h-6 text-warning-600" />
             </div>
           </div>
         </Card>
       </div>
-
-      {/* Jargon of the Week */}
-      <Card
-        title="🔥 Jargon of the Week"
-        className="bg-gradient-to-br from-primary-50 to-purple-50 dark:from-primary-900/20 dark:to-purple-900/20 border-2 border-primary-200 dark:border-primary-800"
-      >
-        <div className="space-y-3">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-            Microservices
-          </h3>
-          <p className="text-gray-700 dark:text-gray-300">
-            An architectural style that structures an application as a collection of loosely coupled, independently deployable services.
-          </p>
-          <Link to="/jargon/microservices">
-            <Button variant="primary">Learn More</Button>
-          </Link>
-        </div>
-      </Card>
 
       {/* Filters */}
       <Card>
@@ -238,7 +263,7 @@ function JargonLibraryPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onClear={() => setSearchTerm('')}
-            placeholder="Search jargon..."
+            placeholder="Search jargon term or definition..."
           />
           <Select
             options={categories}
@@ -254,15 +279,15 @@ function JargonLibraryPage() {
       </Card>
 
       {/* Jargon Grid */}
-      {jargonTerms.length === 0 ? (
+      {filteredJargons.length === 0 ? (
         <EmptyState
           icon={FiBook}
-          title="No jargon terms found"
-          description="Try adjusting your filters or search term."
+          title="No matching jargon terms"
+          description="Try adjusting your search keywords or filter dropdowns."
         />
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {jargonTerms.map((jargon) => (
+          {filteredJargons.map((jargon) => (
             <JargonCard key={jargon.id} jargon={jargon} />
           ))}
         </div>

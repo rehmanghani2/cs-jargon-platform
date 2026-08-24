@@ -1,5 +1,9 @@
 
 /** @type {import('tailwindcss').Config} */
+
+import forms from '@tailwindcss/forms'
+import typography from '@tailwindcss/typography'
+
 export default {
   content: [
     "./index.html",
@@ -52,6 +56,9 @@ export default {
           600: '#dc2626',
         },
       },
+      borderWidth: {
+        '3': '3px',
+     },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
         display: ['Poppins', 'sans-serif'],
@@ -68,6 +75,18 @@ export default {
         'bounce-subtle': 'bounceSubtle 2s infinite',
         'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
+      // ADD THIS LINE
+        border: "hsl(var(--border, 214.3 31.8% 91.4%))",
+        input: "hsl(var(--input, 214.3 31.8% 91.4%))",
+        ring: "hsl(var(--ring, 221.2 83.2% 53.3%))",
+
+        fontFamily: {
+          sans: ['Inter', 'system-ui', 'sans-serif'],
+          display: ['Poppins', 'sans-serif'],
+          heading: ['Poppins', 'sans-serif'], // Add this to match your CSS imports
+          mono: ['Fira Code', 'monospace'],
+        },
+
       keyframes: {
         fadeIn: {
           '0%': { opacity: '0' },
@@ -89,8 +108,10 @@ export default {
     },
   },
   plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
+    // require('@tailwindcss/forms'),
+    // require('@tailwindcss/typography'),
+    forms,
+    typography
   ],
 }
 

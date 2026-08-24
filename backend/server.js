@@ -125,8 +125,16 @@ mongoose.connect(process.env.MONGODB_URI)
         
         // Start server
         const PORT = process.env.PORT || 5000;
-        app.listen(PORT, () => {
+        const server = app.listen(PORT, () => {
             console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+        });
+
+        // Graceful shutdown on nodemon restart or process termination
+        process.on('SIGTERM', () => {
+            server.close();
+        });
+        process.on('SIGINT', () => {
+            server.close();
         });
     })
     .catch((err) => {
