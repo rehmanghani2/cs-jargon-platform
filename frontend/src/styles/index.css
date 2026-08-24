@@ -293,30 +293,66 @@
 @layer utilities {
   .text-gradient {
     @apply bg-clip-text text-transparent bg-gradient-to-r 
-           from-primary-600 to-purple-600;
+           from-primary-600 via-indigo-500 to-purple-600;
+  }
+
+  .text-gradient-emerald {
+    @apply bg-clip-text text-transparent bg-gradient-to-r 
+           from-emerald-500 via-teal-400 to-cyan-500;
+  }
+
+  .text-gradient-amber {
+    @apply bg-clip-text text-transparent bg-gradient-to-r 
+           from-amber-500 via-orange-500 to-red-500;
   }
 
   .glass-effect {
-    @apply bg-white/70 backdrop-blur-lg border border-white/20 
-           dark:bg-gray-800/70 dark:border-gray-700/20;
+    @apply bg-white/70 backdrop-blur-xl border border-white/30 
+           dark:bg-gray-900/70 dark:border-gray-700/40 shadow-xl;
+  }
+
+  .glass-card {
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-md 
+           border border-gray-200/80 dark:border-gray-700/60 
+           shadow-lg hover:shadow-2xl transition-all duration-300;
+  }
+
+  .glow-shadow {
+    box-shadow: 0 10px 30px -10px rgba(79, 70, 229, 0.25);
+  }
+
+  .glow-shadow-emerald {
+    box-shadow: 0 10px 30px -10px rgba(16, 185, 129, 0.25);
   }
 
   .animate-fade-in {
-    animation: fadeIn 0.3s ease-in-out;
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .animate-float-slow {
+    animation: floatSlow 6s ease-in-out infinite;
+  }
+
+  .animate-float-delayed {
+    animation: floatSlow 6s ease-in-out 3s infinite;
+  }
+
+  .animate-pulse-subtle {
+    animation: pulseSubtle 3s ease-in-out infinite;
   }
 
   /* Skeleton loading */
   .skeleton {
-    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded;
+    @apply animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg;
   }
 
   /* Hover scale effect */
   .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
+    @apply transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02];
   }
 
   /* Focus visible */
@@ -330,15 +366,17 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
+    transform: scale(1);
   }
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(10px);
+    transform: translateY(16px);
     opacity: 0;
   }
   to {
@@ -347,20 +385,39 @@
   }
 }
 
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-12px) rotate(1deg);
+  }
+}
+
+@keyframes pulseSubtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
 /* Custom utilities for specific features */
 .streak-fire {
-  filter: drop-shadow(0 0 8px rgba(251, 146, 60, 0.5));
+  filter: drop-shadow(0 0 10px rgba(249, 115, 22, 0.6));
+  animation: pulseSubtle 1.8s infinite;
 }
 
 .badge-shimmer {
   background: linear-gradient(
     90deg,
-    rgba(59, 130, 246, 0.1) 0%,
-    rgba(59, 130, 246, 0.3) 50%,
-    rgba(59, 130, 246, 0.1) 100%
+    rgba(99, 102, 241, 0.1) 0%,
+    rgba(99, 102, 241, 0.35) 50%,
+    rgba(99, 102, 241, 0.1) 100%
   );
   background-size: 200% 100%;
-  animation: shimmer 2s infinite;
+  animation: shimmer 2.5s infinite;
 }
 
 @keyframes shimmer {

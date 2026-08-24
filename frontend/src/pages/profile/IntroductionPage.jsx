@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@hooks/useAuth';
+import userApi from '@api/userApi';
 import Card from '@components/common/Card';
 import Button from '@components/common/Button';
 import Input from '@components/common/Input';
@@ -69,9 +70,21 @@ function IntroductionPage() {
   };
 
   const handleComplete = async () => {
-    // Save user preferences
-    await updateUser({
+    try {
+      await userApi.completeProfile({
+        age: 20,
+        gender: 'other',
+        educationalBackground: 'undergraduate',
+        currentField: formData.bio || 'Computer Science',
+        learningPreferences: ['flashcards', 'interactive-exercises'],
+        weeklyTimeCommitment: parseInt(formData.availability) || 5
+      });
+    } catch (e) {
+      console.log('Error updating backend profile:', e);
+    }
+    updateUser({
       ...formData,
+      isProfileComplete: true,
       hasCompletedIntroduction: true,
     });
     navigate('/dashboard');

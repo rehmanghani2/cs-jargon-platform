@@ -123,19 +123,32 @@ mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
         console.log('✅ MongoDB Connected Successfully');
         
-        // Start server
-        const PORT = process.env.PORT || 5000;
-        const server = app.listen(PORT, () => {
-            console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-        });
+        // Start server with fallback port handling
+        let PORT = parseInt(process.env.PORT, 10) || 5000;
 
-        // Graceful shutdown on nodemon restart or process termination
-        process.on('SIGTERM', () => {
-            server.close();
-        });
-        process.on('SIGINT', () => {
-            server.close();
-        });
+        const startServer = (port) => {
+            const server = app.listen(port, () => {
+                console.log(`🚀 Server running in ${process.env.NODE_ENV || 'development'} mode on port ${port}`);
+            });
+
+            server.on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    console.warn(`⚠️ Port ${port} is currently in use by another process.`);
+                    const nextPort = port + 1;
+                    console.log(`🔄 Retrying server startup on port ${nextPort}...`);
+                    startServer(nextPort);
+                } else {
+                    console.error('❌ Server Startup Error:', err.message);
+                    process.exit(1);
+                }
+            });
+
+            // Graceful shutdown on nodemon restart or process termination
+            process.on('SIGTERM', () => server.close());
+            process.on('SIGINT', () => server.close());
+        };
+
+        startServer(PORT);
     })
     .catch((err) => {
         console.error('❌ MongoDB Connection Error:', err.message);

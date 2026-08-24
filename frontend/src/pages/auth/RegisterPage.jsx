@@ -6,11 +6,16 @@ import { validateRegistration } from '@utils/validators';
 import Input from '@components/common/Input';
 import Button from '@components/common/Button';
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from 'react-icons/fi';
+import { API_URL } from '@utils/constants';
 
 function RegisterPage() {
   const { register } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${API_URL}/auth/google`;
+  };
 
   const handleSubmit = async (values) => {
     await register(values);
@@ -186,7 +191,7 @@ function RegisterPage() {
         </div>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
-          <Button variant="outline" fullWidth>
+          <Button variant="outline" fullWidth onClick={handleGoogleLogin}>
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path
                 fill="currentColor"

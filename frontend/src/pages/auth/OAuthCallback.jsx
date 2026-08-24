@@ -5,15 +5,18 @@ import { FiLoader, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import { FaGoogle, FaGithub } from 'react-icons/fa';
 import { useAuth } from '@hooks/useAuth';
 import Loader from '@components/common/Loader';
+import { tokenManager, userManager } from '@utils/helpers';
+import authApi from '@api/authApi';
 
 const OAuthCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { oauthLogin, user } = useAuth();
+  const { oauthLogin, refreshUser } = useAuth();
   
   const [status, setStatus] = useState('processing'); // 'processing', 'success', 'error'
   const [message, setMessage] = useState('');
   
+  const token = searchParams.get('token');
   const code = searchParams.get('code');
   const provider = searchParams.get('provider') || 'google';
   const error = searchParams.get('error');
@@ -25,33 +28,68 @@ const OAuthCallback = () => {
       return;
     }
 
-    if (code) {
+    if (token) {
+      handleTokenCallback(token);
+    } else if (code) {
       handleOAuthCallback();
     } else {
       setStatus('error');
       setMessage('Invalid authentication response. Please try again.');
     }
-  }, [code, error]);
+  }, [token, code, error]);
+
+  const handleTokenCallback = async (jwtToken) => {
+    try {
+      setStatus('processing');
+      tokenManager.setToken(jwtToken);
+      const userRes = await authApi.getCurrentUser();
+      const currentUser = userRes.data?.user || userRes.user;
+      
+      if (currentUser) {
+        userManager.setUser(currentUser);
+        await refreshUser();
+        setStatus('success');
+        setMessage('Authentication successful! Redirecting...');
+        
+        setTimeout(() => {
+          if (!currentUser.isProfileComplete) {
+            navigate('/introduction');
+          } else if (!currentUser.placementTestCompleted) {
+            navigate('/placement-test');
+          } else {
+            navigate('/dashboard');
+          }
+        }, 1500);
+      } else {
+        throw new Error('Failed to load user profile');
+      }
+    } catch (err) {
+      setStatus('error');
+      setMessage(err.message || 'OAuth verification failed');
+    }
+  };
 
   const handleOAuthCallback = async () => {
     try {
       setStatus('processing');
-      await oauthLogin(provider, code);
+      const res = await oauthLogin(provider, code);
       setStatus('success');
       setMessage('Authentication successful! Redirecting...');
       
-      // Redirect based on user status
+      const loggedInUser = res.user;
       setTimeout(() => {
-        if (user?.hasCompletedIntroduction) {
-          navigate('/dashboard');
-        } else {
+        if (loggedInUser && !loggedInUser.isProfileComplete) {
           navigate('/introduction');
+        } else if (loggedInUser && !loggedInUser.placementTestCompleted) {
+          navigate('/placement-test');
+        } else {
+          navigate('/dashboard');
         }
-      }, 2000);
-    } catch (error) {
+      }, 1500);
+    } catch (err) {
       setStatus('error');
       setMessage(
-        error.response?.data?.message ||
+        err.response?.data?.message ||
         'Failed to authenticate. Please try again.'
       );
     }

@@ -25,8 +25,8 @@ function ProtectedRoute({ allowedRoles = [] }) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  // Check if user needs to complete introduction
-  if (!user?.hasCompletedIntroduction && location.pathname !== '/introduction') {
+  // Check if user needs to complete introduction / profile setup
+  if (user && !user.isProfileComplete && !user.hasCompletedIntroduction && location.pathname !== '/introduction') {
     return <Navigate to="/introduction" replace />;
   }
 

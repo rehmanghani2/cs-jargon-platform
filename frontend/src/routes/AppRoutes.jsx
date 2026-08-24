@@ -88,8 +88,9 @@ function AppRoutes() {
       {/* Email Verification */}
       <Route path="/verify-email/:token" element={<VerifyEmailPage />} />
 
-      {/* OAuth Callback */}
+      {/* OAuth Callbacks */}
       <Route path="/auth/callback" element={<OAuthCallback />} />
+      <Route path="/oauth-callback" element={<OAuthCallback />} />
 
       {/* Protected Routes */}
       <Route element={<ProtectedRoute />}>

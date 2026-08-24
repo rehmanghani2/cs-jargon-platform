@@ -16,7 +16,10 @@ function PublicRoute() {
 
   if (isAuthenticated) {
     // Get the page they were trying to visit or default to dashboard
-    const from = location.state?.from?.pathname || '/dashboard';
+    let from = location.state?.from?.pathname || '/dashboard';
+    if (from === '/' || from === '/login' || from === '/register') {
+      from = '/dashboard';
+    }
     return <Navigate to={from} replace />;
   }
 

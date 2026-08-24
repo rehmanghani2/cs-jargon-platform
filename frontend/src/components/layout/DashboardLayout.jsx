@@ -16,24 +16,24 @@ function DashboardLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-50 dark:bg-gray-900 overflow-hidden">
       {/* Sidebar */}
       <Sidebar isOpen={isSidebarOpen} onClose={closeSidebar} />
 
       {/* Main content area */}
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         {/* Navbar */}
         <Navbar onToggleSidebar={toggleSidebar} isSidebarOpen={isSidebarOpen} />
 
-        {/* Main content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="container-custom py-6">
+        {/* Main content with integrated smooth scroll & footer */}
+        <main className="flex-1 overflow-y-auto flex flex-col justify-between">
+          <div className="container-custom py-6 flex-1">
             <Outlet />
           </div>
-        </main>
 
-        {/* Footer */}
-        <Footer />
+          {/* Footer at bottom of page content */}
+          <Footer />
+        </main>
       </div>
     </div>
   );

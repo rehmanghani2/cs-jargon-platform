@@ -108,38 +108,57 @@ function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div>
-        <h1 className="text-3xl font-display font-bold text-gray-900 dark:text-white">
-          Welcome back, {user?.name?.split(' ')[0]}! 👋
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Here's what's happening with your learning journey today.
-        </p>
+    <div className="space-y-8 animate-fade-in">
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-600 via-indigo-600 to-purple-700 text-white p-6 sm:p-8 shadow-xl shadow-primary-500/15">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-xs font-semibold backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Active Placement Level: {user?.assignedLevel || 'Intermediate'}</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-display font-extrabold tracking-tight">
+              Welcome back, {user?.name?.split(' ')[0] || 'Student'}! 👋
+            </h1>
+            <p className="text-primary-100 text-sm max-w-xl">
+              You are on a <strong>{user?.currentStreak || 7}-day streak</strong>! Explore new Computer Science terminologies and complete today's jargon challenge.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              to="/jargon"
+              className="px-5 py-2.5 rounded-xl bg-white text-primary-700 font-bold text-sm shadow-md hover:bg-primary-50 hover:scale-105 active:scale-95 transition-all inline-flex items-center gap-2"
+            >
+              <FiBook className="w-4 h-4" />
+              Explore Jargon Vault
+            </Link>
+          </div>
+        </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {stats.map((stat, index) => {
           const Icon = stat.icon;
           return (
-            <Link key={index} to={stat.link}>
-              <Card hover className="h-full">
+            <Link key={index} to={stat.link} className="group">
+              <div className="glass-card rounded-2xl p-5 hover-scale relative overflow-hidden">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                       {stat.title}
                     </p>
-                    <p className="mt-2 text-3xl font-bold text-gray-900 dark:text-white">
+                    <p className="mt-2 text-2xl font-extrabold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                       {stat.value}
                     </p>
                   </div>
-                  <div className={`w-12 h-12 rounded-lg ${stat.bgColor} flex items-center justify-center`}>
+                  <div className={`w-12 h-12 rounded-xl ${stat.bgColor} flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform`}>
                     <Icon className={`w-6 h-6 ${stat.color}`} />
                   </div>
                 </div>
-              </Card>
+              </div>
             </Link>
           );
         })}
@@ -148,37 +167,39 @@ function DashboardPage() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Recent Courses */}
         <div className="lg:col-span-2">
-          <Card title="Continue Learning">
+          <Card title="Continue Learning Paths">
             <div className="space-y-4">
               {recentCourses.map((course) => (
                 <div
                   key={course.id}
-                  className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+                  className="p-4 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200/60 dark:border-gray-700/50 rounded-xl hover:border-primary-500/40 transition-all"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div>
-                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                      <h3 className="font-bold text-gray-900 dark:text-white text-base">
                         {course.title}
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {course.instructor}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                        Instructor: {course.instructor}
                       </p>
                     </div>
-                    <Badge variant="info">{course.progress}%</Badge>
+                    <span className="px-2.5 py-1 rounded-full bg-primary-500/10 text-primary-600 dark:text-primary-400 text-xs font-bold">
+                      {course.progress}% Complete
+                    </span>
                   </div>
                   
                   <ProgressBar value={course.progress} size="small" className="mb-3" />
                   
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">
-                      Next: {course.nextLesson}
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <span className="text-gray-500 dark:text-gray-400 font-medium">
+                      Next Module: <strong className="text-gray-800 dark:text-gray-200">{course.nextLesson}</strong>
                     </span>
                     <Link
                       to={`/courses/${course.id}`}
-                      className="text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium inline-flex items-center gap-1"
+                      className="text-primary-600 hover:text-primary-700 dark:text-primary-400 font-bold inline-flex items-center gap-1 group"
                     >
-                      Continue
-                      <FiArrowRight className="w-4 h-4" />
+                      <span>Resume</span>
+                      <FiArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </div>
                 </div>
@@ -189,27 +210,29 @@ function DashboardPage() {
 
         {/* Upcoming Assignments */}
         <div>
-          <Card title="Upcoming Assignments">
+          <Card title="Deadlines & Quizzes">
             <div className="space-y-3">
               {upcomingAssignments.map((assignment) => (
                 <Link
                   key={assignment.id}
                   to={`/assignments/${assignment.id}`}
-                  className="block p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-colors"
+                  className="block p-3.5 bg-gray-50/80 dark:bg-gray-800/50 border border-gray-200/60 dark:border-gray-700/50 rounded-xl hover:bg-white dark:hover:bg-gray-800 hover:shadow-md transition-all group"
                 >
-                  <div className="flex items-start gap-2 mb-2">
-                    <FiClock className="w-4 h-4 text-gray-400 mt-0.5" />
+                  <div className="flex items-start gap-2.5 mb-2">
+                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-500 dark:text-indigo-400">
+                      <FiClock className="w-4 h-4" />
+                    </div>
                     <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <h4 className="text-sm font-bold text-gray-900 dark:text-white truncate group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
                         {assignment.title}
                       </h4>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {assignment.course}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">
                       Due {assignment.dueDate}
                     </span>
                     {assignment.status === 'in_progress' && (
@@ -225,26 +248,26 @@ function DashboardPage() {
             
             <Link
               to="/assignments"
-              className="mt-4 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 font-medium inline-flex items-center gap-1"
+              className="mt-4 text-xs font-bold text-primary-600 hover:text-primary-700 dark:text-primary-400 inline-flex items-center gap-1 group"
             >
-              View all assignments
-              <FiArrowRight className="w-4 h-4" />
+              <span>View All Assignments</span>
+              <FiArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Card>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <Card title="Recent Activity">
+      <Card title="Activity Timeline">
         <div className="space-y-4">
           {recentActivity.map((activity, index) => (
             <div key={index} className="flex items-start gap-4">
-              <div className="w-2 h-2 bg-primary-600 rounded-full mt-2"></div>
+              <div className="w-2.5 h-2.5 bg-gradient-to-r from-primary-600 to-indigo-600 rounded-full mt-1.5 shadow-sm" />
               <div className="flex-1">
-                <p className="text-sm text-gray-900 dark:text-white">
+                <p className="text-sm font-semibold text-gray-900 dark:text-white">
                   {activity.text}
                 </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                   {activity.time}
                 </p>
               </div>

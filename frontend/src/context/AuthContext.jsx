@@ -22,11 +22,17 @@ export function AuthProvider({ children }) {
         if (token && savedUser) {
           // Verify token is still valid by fetching current user
           const response = await authApi.getCurrentUser();
-          setUser(response.user);
-          setIsAuthenticated(true);
+          const currentUser = response.data?.user || response.user;
           
-          // Update saved user data
-          userManager.setUser(response.user);
+          if (currentUser) {
+            setUser(currentUser);
+            setIsAuthenticated(true);
+            // Update saved user data
+            userManager.setUser(currentUser);
+          } else {
+            setIsAuthenticated(false);
+            setUser(null);
+          }
         } else {
           // No valid auth state
           setIsAuthenticated(false);
@@ -147,9 +153,12 @@ export function AuthProvider({ children }) {
   const refreshUser = async () => {
     try {
       const response = await authApi.getCurrentUser();
-      setUser(response.user);
-      userManager.setUser(response.user);
-      return response.user;
+      const currentUser = response.data?.user || response.user;
+      if (currentUser) {
+        setUser(currentUser);
+        userManager.setUser(currentUser);
+      }
+      return currentUser;
     } catch (error) {
       console.error('Error refreshing user:', error);
       return null;
